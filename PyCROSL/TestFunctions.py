@@ -130,7 +130,28 @@ class TimeTest(AbsObjectiveFunc):
 
 class TiempoAeropuerto(AbsObjectiveFunc):
 
-    def __init__(self, size, stands, data, bounds, tin, tout, tstp, emissions, option, opt="min"):
+
+    """
+        Expected input of dict_tiempos_ida and dict_tiempos_vuelta:
+        dict_tiempos_ida = { -> representa el tiempo del exterior a 
+            "Number_stand" : 10,
+            "Number_stand2": 20,
+            "Number_stand3": 30
+            ...
+        }
+        dict_tiempos_vuelta = {
+            "Number_stand" : 10,
+            "Number_stand2": 20,
+            "Number_stand3": 30
+            ...
+        }
+
+
+    """
+
+
+
+    def __init__(self, size, stands, data, bounds, tin, tout, tstp, emissions, option, dict_tiempos_ida, dict_tiempos_vuelta ,opt="min"):
         self.size = size
         self.stands = stands
         self.data = data
@@ -140,8 +161,15 @@ class TiempoAeropuerto(AbsObjectiveFunc):
         self.Tout = tout
         self.Tstp = tstp
         self.option = option
+        self.dict_tiempos_ida = dict_tiempos_ida
+        self.dict_tiempos_vuelta = dict_tiempos_vuelta
         self.factor = 1
         super().__init__(self.size, opt)
+
+
+    def fitness_pasajeros(self, solution):
+        solution = pd.DataFrame(solution)
+        pass
 
     def objective(self, solution):
         solution = pd.DataFrame(solution)
@@ -289,8 +317,11 @@ class TiempoAeropuerto(AbsObjectiveFunc):
                         total_fuel[a] = self.emissions.loc[self.emissions["equip"] == self.data.loc[a, "equip"], "number engines"] * total_time[a] * self.emissions.loc[self.emissions["equip"] == self.data.loc[a, "equip"], "Fuel Flow Idle (kg/sec)"]
             else:  # si no tenemos los datos de consumo del avión multiplicamos el tiempo por un valor costante
                 total_fuel[a] = media_motores * media_consumo * total_time[a]
-
-        return total_fuel.sum() if self.option == "fuel" else total_time.sum()
+        fitnessOriginal = total_fuel.sum() if self.option == "fuel" else total_time.sum()
+        if self.dict_tiempos_ida != None and self.dict_tiempos_vuelta != None:
+            fitnessPasajeros = self.fitness_pasajeros(solution)
+            return (fitnessOriginal, fitnessPasajeros)
+        return fitnessOriginal
 
     def random_solution(self):
         return np.round((self.bounds[1] - self.bounds[0]) * np.random.random(self.size) + self.bounds[0]).astype(int)
@@ -397,82 +428,6 @@ class TiempoAeropuerto(AbsObjectiveFunc):
 
     def repair_solution(self, solution):
         return self.check_bounds(solution)
-
-class PassengersTimeFunction(AbsObjectiveFunc):
-    """
-    Expected input of dict_tiempos_ida and dict_tiempos_vuelta:
-    dict_tiempos_ida = {
-        "Number_stand" : 10,
-        "Number_stand2": 20,
-        "Number_stand3": 30
-        ...
-    }
-    dict_tiempos_vuelta = {
-        "Number_stand" : 10,
-        "Number_stand2": 20,
-        "Number_stand3": 30
-        ...
-    }
-    """
-    def __init__(self, input_size, dict_tiempos_ida, dict_tiempos_vuelta,vuelos_con_direccion,opt = "min", sup_lim = 10000000, inf_lim = 0, name = "Multivariate Function"):
-        super().__init__(input_size, opt, sup_lim, inf_lim, name)
-        self.counter = 0
-        self.input_size = input_size
-        self.dict_tiempos_ida = dict_tiempos_ida
-        self.dict_tiempos_vuelta = dict_tiempos_vuelta
-        self.vuelos_con_direccion = vuelos_con_direccion
-        self.factor = 1
-        self.opt = opt
-        self.sup_lim = sup_lim
-        self.inf_lim = inf_lim
-        if self.opt == "min":
-            self.factor = -1
-        self.name = name
-
-    def fitness_pasajeros(self, solution):
-        """
-        Returns the time that the passengers have to wait.
-        """
-        
-        time = 0
-        for key in solution:
-            time += self.dict_tiempos_ida[key]     
-            #time += self.dict_tiempos_vuelta[key]  # que salen del avión, no se si sumarlo al tiempo total, o como hacerlo.
-        return time
-
-
-    def objective(self, solution):
-        """
-        Implementation of the objective function.
-        """
-        return self.fitness_pasajeros(solution)
-    
-    def random_solution(self):
-        """
-        Returns a random vector. 
-        """
-        # aqui debe crearse una solucion que valga, por ejemplo con la restriccion de que los stands esten ocupados no seguidamente o algo asi
-        # esta funcion deberia estar hecha en el proyecto del problema GAP con los tiempos de taxi
-    
-    def repair_solution(self, solution):
-        """
-        Modifies a solution so that it satisfies the restrictions of the problem.
-        """
-        # aqui deberia haber una funcion que repare la solucion, por ejemplo si hay dos stands ocupados seguidos, que se cambie uno de ellos
-        # esta funcion deberia estar hecha en el proyecto del problema GAP con los tiempos de taxi
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 @jit(nopython=True)
 def rosenbrock(solution):
