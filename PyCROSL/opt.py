@@ -42,8 +42,8 @@ params = {
     "prob_amp": 0.1
 }
 # data required for optimization is read
-os.chdir("D:\master\segundo cuatri\TFM\\repositorio_cro\PyCROSL\PyCROSL")
-print(os.getcwd())
+# la linea de abajo es unicamente necesaria por la configuracion de mi VSCode
+os.chdir("D:\\master\\segundo cuatri\\TFM\\repositorio_cro\\PyCROSL\\PyCROSL")
 data = pd.read_csv("./data/opt_data.csv")
 Tin = pd.read_csv("./data/opt_Tin.csv")
 Tout = pd.read_csv("./data/opt_Tout.csv")
@@ -51,6 +51,8 @@ stands = pd.read_csv("./data/opt_stands.csv")
 Tstp = pd.read_csv("./data/opt_Tstp.csv")
 emissions = pd.read_csv("./data/plane_emissions.csv")
 #stands = pd.read_csv("./data/TodosStands/opt_stands.csv")
+dict_tiempos_salidas = pd.read_excel("./data/stand_tiempo_salidas.xlsx")
+dict_tiempos_llegadas = pd.read_excel("./data/stand_tiempo_llegadas.xlsx")
 option = "time"
 # number of optimization variables
 Nvar = data["cod"].sum()
@@ -62,7 +64,7 @@ size = Nvar
 
 #Parte de optimización con el CRO
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-f = TiempoAeropuerto(Nvar, stands, data, bounds, Tin, Tout, Tstp, emissions, option)
+f = TiempoAeropuerto(Nvar, stands, data, bounds, Tin, Tout, Tstp, emissions, option, dict_tiempos_llegadas, dict_tiempos_salidas)
 c = CRO_SL(f, substrates, params)
 population = CoralPopulation(f, substrates, params)
 population.generate_random()

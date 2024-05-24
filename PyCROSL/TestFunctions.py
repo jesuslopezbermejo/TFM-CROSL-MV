@@ -132,14 +132,14 @@ class TiempoAeropuerto(AbsObjectiveFunc):
 
 
     """
-        Expected input of dict_tiempos_ida and dict_tiempos_vuelta:
-        dict_tiempos_ida = { -> representa el tiempo del exterior a 
+        Expected input of dict_tiempos_llegadas and dict_tiempos_salidas:
+        dict_tiempos_llegadas = { 
             "Number_stand" : 10,
             "Number_stand2": 20,
             "Number_stand3": 30
             ...
         }
-        dict_tiempos_vuelta = {
+        dict_tiempos_salidas = {
             "Number_stand" : 10,
             "Number_stand2": 20,
             "Number_stand3": 30
@@ -149,9 +149,7 @@ class TiempoAeropuerto(AbsObjectiveFunc):
 
     """
 
-
-
-    def __init__(self, size, stands, data, bounds, tin, tout, tstp, emissions, option, dict_tiempos_ida, dict_tiempos_vuelta ,opt="min"):
+    def __init__(self, size, stands, data, bounds, tin, tout, tstp, emissions, option, dict_tiempos_llegadas, dict_tiempos_salidas ,opt="min"):
         self.size = size
         self.stands = stands
         self.data = data
@@ -161,15 +159,26 @@ class TiempoAeropuerto(AbsObjectiveFunc):
         self.Tout = tout
         self.Tstp = tstp
         self.option = option
-        self.dict_tiempos_ida = dict_tiempos_ida
-        self.dict_tiempos_vuelta = dict_tiempos_vuelta
+        self.dict_tiempos_llegadas = dict_tiempos_llegadas
+        self.dict_tiempos_salidas = dict_tiempos_salidas
         self.factor = 1
         super().__init__(self.size, opt)
 
 
     def fitness_pasajeros(self, solution):
         solution = pd.DataFrame(solution)
-        pass
+        # esto se hace por si acaso pero no hace falta por que siempre se ejecuta despues de objective que ya lo hace
+        self.data.loc[self.data["cod"] == 1, "stand"] = [self.stands.stands[i] for i in solution.values]
+        global_time = 0
+        aux_flights = zip(self.data.loc[self.data["cod"] == 1, "stand"], self.data.loc[self.data["cod"] == 1, "flight_type"])
+        for assigned_stand, flight_type in aux_flights: #esto no se si se debe hacer solo sobre los que son cod 1, no se si se debe hacer sobre todos 
+            if assigned_stand.isdigit():
+                assigned_stand = str(int(assigned_stand))
+            if flight_type == 2: # aterrizaje es decir llegadas
+                global_time += self.dict_tiempos_llegadas.loc[np.where(self.dict_tiempos_llegadas == assigned_stand)[0][0], "Tiempo_Llegada"]
+            elif flight_type == 1: # despegue es decir salidas
+                global_time += self.dict_tiempos_salidas.loc[np.where(self.dict_tiempos_salidas == assigned_stand)[0][0], "Tiempo_Salida"]
+        return global_time
 
     def objective(self, solution):
         solution = pd.DataFrame(solution)
@@ -318,7 +327,7 @@ class TiempoAeropuerto(AbsObjectiveFunc):
             else:  # si no tenemos los datos de consumo del avión multiplicamos el tiempo por un valor costante
                 total_fuel[a] = media_motores * media_consumo * total_time[a]
         fitnessOriginal = total_fuel.sum() if self.option == "fuel" else total_time.sum()
-        if self.dict_tiempos_ida != None and self.dict_tiempos_vuelta != None:
+        if self.dict_tiempos_salidas is not None and self.dict_tiempos_llegadas is not None:
             fitnessPasajeros = self.fitness_pasajeros(solution)
             return (fitnessOriginal, fitnessPasajeros)
         return fitnessOriginal
