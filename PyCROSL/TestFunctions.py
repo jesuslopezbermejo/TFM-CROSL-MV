@@ -164,6 +164,11 @@ class TiempoAeropuerto(AbsObjectiveFunc):
         self.factor = 1
         super().__init__(self.size, opt)
 
+    #Override fitness function due to the multivariate fitness
+    def fitness(self, solution):
+        self.counter += 1
+        aux = self.objective(solution)
+        return (self.factor * aux[0], self.factor * aux[1])
 
     def fitness_pasajeros(self, solution):
         solution = pd.DataFrame(solution)
@@ -175,9 +180,9 @@ class TiempoAeropuerto(AbsObjectiveFunc):
             if assigned_stand.isdigit():
                 assigned_stand = str(int(assigned_stand))
             if flight_type == 2: # aterrizaje es decir llegadas
-                global_time += self.dict_tiempos_llegadas.loc[np.where(self.dict_tiempos_llegadas == assigned_stand)[0][0], "Tiempo_Llegada"]
+                global_time += int(self.dict_tiempos_llegadas.loc[np.where(self.dict_tiempos_llegadas == assigned_stand)[0][0], "Tiempo_Llegada"])
             elif flight_type == 1: # despegue es decir salidas
-                global_time += self.dict_tiempos_salidas.loc[np.where(self.dict_tiempos_salidas == assigned_stand)[0][0], "Tiempo_Salida"]
+                global_time += int(self.dict_tiempos_salidas.loc[np.where(self.dict_tiempos_salidas == assigned_stand)[0][0], "Tiempo_Salida"])
         return global_time
 
     def objective(self, solution):

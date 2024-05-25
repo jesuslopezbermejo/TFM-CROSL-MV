@@ -69,9 +69,11 @@ c = CRO_SL(f, substrates, params)
 population = CoralPopulation(f, substrates, params)
 population.generate_random()
 population.generate_substrates(0)
+c.population.best_solution()
 larvae = population.evolve_with_substrates()
 population.larvae_setting(larvae)
 population.depredation()
+mejor, mejorfit = population.best_solution()
 iter=0
 while f.counter < Neval:
     iter += 1

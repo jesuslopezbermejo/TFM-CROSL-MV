@@ -17,9 +17,6 @@ class Coral:
         
         self.fitness_calculated = False
         self.fitness = 0
-        
-        #self.fitness1 = 0
-        #self.fitness2 = 0
 
         self.is_dead = False
 
@@ -34,13 +31,8 @@ class Coral:
         """
 
         if not self.fitness_calculated:
-            #fitness_tuple = self.objfunc.fitness(self.solution) #aqui se calcula el fitness1, despues deberia ser fitness2, y devolver una tupla
-            #self.fitness1 = fitness_tuple[0]
-            #self.fitness2 = fitness_tuple[1] 
-            
             self.fitness = self.objfunc.fitness(self.solution)
             self.fitness_calculated = True
-        #return self.fitness1, self.fitness2
         return self.fitness
     
     def set_substrate(self, substrate):
@@ -152,18 +144,36 @@ class CoralPopulation:
 
         return distances
     
-    
+    def get_pareto_front(self):
+        """
+        Obtains the Pareto front of the population
+        """
+
+        pareto_front = []
+
+        for coral in self.population:
+            actual_fitness = coral.get_fitness()
+            if not all([all(actual_fitness <= coral2.get_fitness()) for coral2 in self.population]):
+                pareto_front.append(coral)
+        
+        return pareto_front
+
+
+
+
     def best_solution(self):
         """
         Gives the best solution found by the algorithm and its fitness
+        In the multi-objective case, it returns the Pareto front
         """
+        pareto_front = self.get_pareto_front()
+        if len(pareto_front) > 0:
+            if self.objfunc.opt == "min":
+                pareto_front = [(coral.solution, tuple([-1*fitness for fitness in coral.get_fitness()]))for coral in pareto_front]
 
-        #best_solution = sorted(self.population, reverse=True, key = lambda c: c.get_fitness())[0] #aqui habria que especificar como ordenar la population por uno de los dos fitness
-        best_solution = sorted(self.population, reverse=True)
-        best_fitness = best_solution.get_fitness()
-        if self.objfunc.opt == "min":
-            best_fitness *= -1
-        return (best_solution.solution, best_fitness)
+            return pareto_front
+        else:
+            return None
 
     
     def generate_random(self):
@@ -432,7 +442,7 @@ class CoralPopulation:
                 # to replace the coral in that position
                 if setted := (idx >= len(self.population)):
                     self.population.append(larva)
-                elif setted := (larva.get_fitness() > self.population[idx].get_fitness()):
+                elif setted := (larva.get_fitness() > self.population[idx].get_fitness()): # aqui al ser 2 vbles, con ser mayor 1 debería valer? yo creo que no
                     self.population[idx] = larva
 
                 attempts_left -= 1
@@ -488,7 +498,12 @@ class CoralPopulation:
 
             # Select the worse individuals in the grid
             fitness_values = np.array([coral.get_fitness() for coral in self.population])
-            affected_corals = list(np.argsort(fitness_values))[:amount]
+            if len(fitness_values[0]) > 1:
+                #TODO: Implement multi-objective depredation where the worst individuals and index are stored in affected_corals
+                # In order to have the worst individuals in the population, we need to sort the paretos
+                pass
+            else:
+                affected_corals = list(np.argsort(fitness_values))[:amount]
 
             # Set a 'dead' flag in the affected corals with a small probability
             alive_count = len(self.population)
