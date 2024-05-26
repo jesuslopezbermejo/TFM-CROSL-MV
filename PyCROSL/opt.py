@@ -4,9 +4,36 @@ from CRO_SL import CRO_SL
 from SubstrateInt import *
 from TestFunctions import TiempoAeropuerto
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+from cycler import cycler
+from matplotlib.colors import hsv_to_rgb
 import os
+import warnings
 
+warnings.filterwarnings("ignore")
+
+def plot_pareto_optimal(pareto):
+    taxi_time = [solution[0] for solution in pareto]
+    passengers_time = [solution[1] for solution in pareto]
+    plt.scatter(taxi_time, passengers_time)
+    plt.xlabel("Taxi Time")
+    plt.ylabel("Passengers Time")
+    plt.title("Pareto Optimal Solutions")
+    plt.show()
+
+def plot_lasts_pareto_optimals(paretos):
+    colors = [hsv_to_rgb([(i * 0.618033988749895) % 1.0, 1, 1])
+          for i in range(len(paretos))]
+    plt.rc('axes', prop_cycle=(cycler('color', colors)))
+    legend = []
+    for iter, pareto in enumerate(paretos):
+        taxi_time = [solution[0] for solution in pareto]
+        passengers_time = [solution[1] for solution in pareto]
+        plt.plot(taxi_time, passengers_time,'-o', label=f"Iteration {iter}")
+    plt.legend(loc='upper left')
+    plt.xlabel("Taxi Time")
+    plt.ylabel("Passengers Time")
+    plt.title("Pareto Optimal Solutions between iterations")
+    plt.show()
 
 params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75}
 substrates = [
@@ -67,24 +94,32 @@ size = Nvar
 f = TiempoAeropuerto(Nvar, stands, data, bounds, Tin, Tout, Tstp, emissions, option, dict_tiempos_llegadas, dict_tiempos_salidas)
 c = CRO_SL(f, substrates, params)
 population = CoralPopulation(f, substrates, params)
+print("Starting optimization")
 population.generate_random()
 population.generate_substrates(0)
+print("Evolving with substrates")
 larvae = population.evolve_with_substrates()
 population.larvae_setting(larvae)
 population.depredation()
 mejor, mejorfit = population.best_solution()
 
 iter=0
-while f.counter < Neval:
+paretos_optimos_fits = []
+paretos_optimos_pop = []
+while iter < 20: #f.counter < Neval:
     iter += 1
-    print(iter)
+    print(f"Empiezan las iteraciones del algoritmo{iter}")
     population.generate_substrates(0)
     larvae = population.evolve_with_substrates()
     population.larvae_setting(larvae)
     population.depredation()
+    mejor, mejorfit = population.best_solution()
+    paretos_optimos_pop.append(mejor)
+    paretos_optimos_fits.append(mejorfit)
 mejor, mejorfit = population.best_solution()
 print(mejorfit)
-
+plot_lasts_pareto_optimals(paretos_optimos_fits)
+input()
 #Parte de análisis de soluciones
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 sol = pd.read_csv("./data/solution_comp.csv")

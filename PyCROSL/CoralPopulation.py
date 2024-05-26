@@ -521,8 +521,6 @@ class CoralPopulation:
         """
         Performs a local search with the best "n_ind" corals
         """
-        # TODO: Modificar para que se pueda hacer con varios objetivos
-        # Esto implicaria ordenar los paretos, y seleccionar los n_ind mejores
         fitness_values = [coral.get_fitness() for coral in self.population]
         affected_corals = self.n_worse_or_best_individuals(fitness_values, n_ind, worse=False)
         
