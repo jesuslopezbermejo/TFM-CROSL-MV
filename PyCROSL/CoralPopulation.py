@@ -144,20 +144,28 @@ class CoralPopulation:
 
         return distances
     
-    def get_pareto_front(self):
-        """
-        Obtains the Pareto front of the population
-        """
+    def dominates(self, individual_A, individual_B):
+        if all(a <= b for a, b in zip(individual_A, individual_B)):
+            if any(a < b for a, b in zip(individual_A, individual_B)):
+                return True
+        return False
 
-        pareto_front = []
-
-        for coral in self.population:
-            actual_fitness = coral.get_fitness()
-            if not all([all(actual_fitness <= coral2.get_fitness()) for coral2 in self.population]):
-                pareto_front.append(coral)
-        
-        return pareto_front
-
+    def get_pareto_front(self, pop = None, fits = None):
+        if pop is None:
+            pareto_fits = []
+            for i, fit in enumerate(fits):
+                if not any(self.dominates(fit, fits[j]) for j in range(len(fits)) if i != j):
+                    pareto_fits.append(fits[i])
+            return pareto_fits
+        elif fits is None:
+            pareto_pop = []
+            for i, coral in enumerate(pop):
+                fit = coral.get_fitness()
+                if not any(self.dominates(fit, pop[j].get_fitness()) for j in range(len(pop)) if i != j):
+                    pareto_pop.append(pop[i])
+            return pareto_pop
+        else: 
+            return None
 
 
 
@@ -166,12 +174,12 @@ class CoralPopulation:
         Gives the best solution found by the algorithm and its fitness
         In the multi-objective case, it returns the Pareto front
         """
-        pareto_front = self.get_pareto_front()
+        pareto_front = self.get_pareto_front(pop=self.population)
         if len(pareto_front) > 0:
             if self.objfunc.opt == "min":
                 pareto_front = [(coral.solution, tuple([-1*fitness for fitness in coral.get_fitness()]))for coral in pareto_front]
 
-            return pareto_front
+            return zip(*pareto_front)
         else:
             return None
 
@@ -207,6 +215,22 @@ class CoralPopulation:
             new_ind = Coral(solution, self.objfunc)
             idx = random.randint(self.size)
             self.population[idx] = new_ind
+
+    def get_paretos(self, fitness_values):
+        """
+        :param fitness_values: A list of fitness values
+        :return: A list of pareto front solutions
+        
+        The function is used to find the pareto fronts solutions from the population.
+        """
+        copy_fitness_values = list(fitness_values.copy())
+        fronts = []
+        while(len(copy_fitness_values) > 0):
+            actual_front = self.get_pareto_front(fits=copy_fitness_values)
+            fronts.append(actual_front)
+            for fit in actual_front:
+                copy_fitness_values.remove(fit)
+        return fronts
     
     def get_value_from_data(self, data):
         """
@@ -217,10 +241,15 @@ class CoralPopulation:
 
         # Choose what information to extract from the data gathered
         if len(data) > 0:
+            # TODO: Cambiar para que en el caso de que sea multivariable se adecue a la situación
+            # en este caso, al usar el mejor se deberia devolver el pareto, el average seria la media para cada fitness
+            # y el peor el peor seria el último pareto
+
             data = sorted(data)
             if self.dyn_metric == "best":
-                result = max(data)
+                result = self.get_pareto_front(data)
             elif self.dyn_metric == "avg":
+                result = [sum(x) / len(x) for x in zip(*data)]
                 result = sum(data)/len(data)
             elif self.dyn_metric == "med":
                 if len(data) % 2 == 0:
@@ -463,14 +492,39 @@ class CoralPopulation:
                 substrate_idx = self.substrate_list[idx]
                 larva.set_substrate(self.substrates[substrate_idx])
     
+    def n_worse_or_best_individuals(self, fitness_values, amount, worse=True):
+        """
+        Selects the best or worst individuals in the population
+        """
+        index_pareto = -1
+        affected_corals = []
+        if not worse:
+            index_pareto = 0
+        if len(fitness_values[0]) > 1:
+            paretos = self.get_paretos(fitness_values=fitness_values)
+            while len(affected_corals) < amount:
+                if len(paretos[index_pareto]) == 0:
+                    if not worse:
+                        paretos = paretos[index_pareto+1:]
+                    else:
+                        paretos = paretos[:index_pareto]
+                coral_actual = paretos[index_pareto].pop()
+                affected_corals.append(fitness_values.index(coral_actual))
+        else:    
+            affected_corals = list(np.argsort(fitness_values))[:amount]
+        return affected_corals
     
+
+
+
     def local_search(self, operator, n_ind, iterations=100):
         """
         Performs a local search with the best "n_ind" corals
         """
-
-        fitness_values = np.array([coral.get_fitness() for coral in self.population])
-        affected_corals = list(np.argsort(fitness_values))[len(self.population)-n_ind:]
+        # TODO: Modificar para que se pueda hacer con varios objetivos
+        # Esto implicaria ordenar los paretos, y seleccionar los n_ind mejores
+        fitness_values = [coral.get_fitness() for coral in self.population]
+        affected_corals = self.n_worse_or_best_individuals(fitness_values, n_ind, worse=False)
         
         for i in affected_corals:
             best = self.population[i]
@@ -479,7 +533,7 @@ class CoralPopulation:
                 new_solution = operator.evolve(self.population[i], [], self.objfunc)
                 new_solution = self.objfunc.repair_solution(new_solution)
                 new_coral = Coral(new_solution, self.objfunc, self.population[i].substrate)
-                if new_coral.get_fitness() > best.get_fitness():
+                if new_coral.get_fitness() > best.get_fitness(): # aqui al ser 2 vbles, con ser mayor 1 debería valer? yo creo que no
                     best = new_coral
             
             self.population[i] = best
@@ -497,13 +551,8 @@ class CoralPopulation:
             amount = int(len(self.population)*self.Fd)
 
             # Select the worse individuals in the grid
-            fitness_values = np.array([coral.get_fitness() for coral in self.population])
-            if len(fitness_values[0]) > 1:
-                #TODO: Implement multi-objective depredation where the worst individuals and index are stored in affected_corals
-                # In order to have the worst individuals in the population, we need to sort the paretos
-                pass
-            else:
-                affected_corals = list(np.argsort(fitness_values))[:amount]
+            fitness_values = [coral.get_fitness() for coral in self.population]
+            affected_corals = self.n_worse_or_best_individuals(fitness_values, amount, worse=True)
 
             # Set a 'dead' flag in the affected corals with a small probability
             alive_count = len(self.population)
@@ -533,7 +582,7 @@ class CoralPopulation:
 
         # Select the worse individuals in the grid
         fitness_values = np.array([coral.get_fitness() for coral in self.population])
-        affected_corals = list(np.argsort(fitness_values))[:amount]
+        affected_corals = self.n_worse_or_best_individuals(fitness_values, amount, worse=True)
 
         # Remove all the individuals chosen
         self.population = [self.population[i] for i in range(len(self.population)) if i not in affected_corals] 
