@@ -8,6 +8,7 @@ from cycler import cycler
 from matplotlib.colors import hsv_to_rgb
 import os
 import warnings
+import numpy as np
 
 warnings.filterwarnings("ignore")
 
@@ -21,14 +22,18 @@ def plot_pareto_optimal(pareto):
     plt.show()
 
 def plot_lasts_pareto_optimals(paretos):
+    iterations_to_plot = 1
+    if len(paretos) > 20:
+        iterations_to_plot = 0.05
     colors = [hsv_to_rgb([(i * 0.618033988749895) % 1.0, 1, 1])
-          for i in range(len(paretos))]
+          for i in range(int(iterations_to_plot * len(paretos)))]
     plt.rc('axes', prop_cycle=(cycler('color', colors)))
-    legend = []
+     
     for iter, pareto in enumerate(paretos):
-        taxi_time = [solution[0] for solution in pareto]
-        passengers_time = [solution[1] for solution in pareto]
-        plt.plot(taxi_time, passengers_time,'-o', label=f"Iteration {iter}")
+        if iter == len(paretos) - 1 or iter % int(iterations_to_plot * len(paretos)) == 0:
+            taxi_time = [solution[0] for solution in pareto]
+            passengers_time = [solution[1] for solution in pareto]
+            plt.plot(taxi_time, passengers_time,'-o', label=f"Iteration {iter}")
     plt.legend(loc='upper left')
     plt.xlabel("Taxi Time")
     plt.ylabel("Passengers Time")
@@ -99,16 +104,17 @@ population.generate_random()
 population.generate_substrates(0)
 print("Evolving with substrates")
 larvae = population.evolve_with_substrates()
-population.larvae_setting(larvae)
-population.depredation()
+population.larvae_setting(larvae)#aqui se añaden nuevas soluciones
+population.depredation()#aqui se eliminan las peores soluciones por lo que puede no mantenerse el tamaño de la población
 mejor, mejorfit = population.best_solution()
 
 iter=0
 paretos_optimos_fits = []
 paretos_optimos_pop = []
-while iter < 20: #f.counter < Neval:
+while iter < 100: #f.counter < Neval:
     iter += 1
-    print(f"Empiezan las iteraciones del algoritmo{iter}")
+    print(f"Empiezan las iteraciones del algoritmo: Niter -> {iter}")
+    print(f"len de la population: {len(population.population)}")
     population.generate_substrates(0)
     larvae = population.evolve_with_substrates()
     population.larvae_setting(larvae)
@@ -118,8 +124,10 @@ while iter < 20: #f.counter < Neval:
     paretos_optimos_fits.append(mejorfit)
 mejor, mejorfit = population.best_solution()
 print(mejorfit)
+np.savetxt('paretos_optimos_pop.txt', paretos_optimos_pop[-1])
+np.savetxt('paretos_optimos_fits.txt', paretos_optimos_fits[-1])
 plot_lasts_pareto_optimals(paretos_optimos_fits)
-input()
+
 #Parte de análisis de soluciones
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 sol = pd.read_csv("./data/solution_comp.csv")
