@@ -24,13 +24,13 @@ def plot_pareto_optimal(pareto):
 def plot_lasts_pareto_optimals(paretos):
     iterations_to_plot = 1
     if len(paretos) > 20:
-        iterations_to_plot = 0.05
+        iterations_to_plot = 0.01
     colors = [hsv_to_rgb([(i * 0.618033988749895) % 1.0, 1, 1])
           for i in range(int(iterations_to_plot * len(paretos)))]
     plt.rc('axes', prop_cycle=(cycler('color', colors)))
      
     for iter, pareto in enumerate(paretos):
-        if iter == len(paretos) - 1 or iter % int(iterations_to_plot * len(paretos)) == 0:
+        if iter == len(paretos) - 1 or iter % int(1/iterations_to_plot) == 0:
             taxi_time = [solution[0] for solution in pareto]
             passengers_time = [solution[1] for solution in pareto]
             plt.plot(taxi_time, passengers_time,'-o', label=f"Iteration {iter}")
@@ -39,6 +39,7 @@ def plot_lasts_pareto_optimals(paretos):
     plt.ylabel("Passengers Time")
     plt.title("Pareto Optimal Solutions between iterations")
     plt.show()
+    plt.savefig("pareto_optimal_solutions.png")
 
 params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75}
 substrates = [
@@ -111,7 +112,7 @@ mejor, mejorfit = population.best_solution()
 iter=0
 paretos_optimos_fits = []
 paretos_optimos_pop = []
-while iter < 100: #f.counter < Neval:
+while iter < 1000: #f.counter < Neval:
     iter += 1
     print(f"Empiezan las iteraciones del algoritmo: Niter -> {iter}")
     print(f"len de la population: {len(population.population)}")
