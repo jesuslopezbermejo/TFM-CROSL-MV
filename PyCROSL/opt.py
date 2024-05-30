@@ -8,6 +8,7 @@ from cycler import cycler
 from matplotlib.colors import hsv_to_rgb
 import os
 import warnings
+import time
 import numpy as np
 
 warnings.filterwarnings("ignore")
@@ -30,10 +31,10 @@ def plot_lasts_pareto_optimals(paretos):
     plt.rc('axes', prop_cycle=(cycler('color', colors)))
      
     for iter, pareto in enumerate(paretos):
-        if iter == len(paretos) - 1 or iter % int(1/iterations_to_plot) == 0:
+        if iter == len(paretos) - 1 or (iter+1) % 250 == 0:
             taxi_time = [solution[0] for solution in pareto]
             passengers_time = [solution[1] for solution in pareto]
-            plt.plot(taxi_time, passengers_time,'-o', label=f"Iteration {iter}")
+            plt.plot(taxi_time, passengers_time,'-o', label=f"Iteration {iter+1}")
     plt.legend(loc='upper left')
     plt.xlabel("Taxi Time")
     plt.ylabel("Passengers Time")
@@ -76,7 +77,7 @@ params = {
 }
 # data required for optimization is read
 # la linea de abajo es unicamente necesaria por la configuracion de mi VSCode
-os.chdir("D:\\master\\segundo cuatri\\TFM\\repositorio_cro\\PyCROSL\\PyCROSL")
+os.chdir("D:\\master\\segundo cuatri\\TFM\\repositorio_cro\\TFM-CROSL-MV\\PyCROSL")
 data = pd.read_csv("./data/opt_data.csv")
 Tin = pd.read_csv("./data/opt_Tin.csv")
 Tout = pd.read_csv("./data/opt_Tout.csv")
@@ -112,6 +113,7 @@ mejor, mejorfit = population.best_solution()
 iter=0
 paretos_optimos_fits = []
 paretos_optimos_pop = []
+start_time = time.time()
 while iter < 1000: #f.counter < Neval:
     iter += 1
     print(f"Empiezan las iteraciones del algoritmo: Niter -> {iter}")
@@ -123,6 +125,7 @@ while iter < 1000: #f.counter < Neval:
     mejor, mejorfit = population.best_solution()
     paretos_optimos_pop.append(mejor)
     paretos_optimos_fits.append(mejorfit)
+    print(f"tiempo -> {time.time()-start_time}")
 mejor, mejorfit = population.best_solution()
 print(mejorfit)
 np.savetxt('paretos_optimos_pop.txt', paretos_optimos_pop[-1])
