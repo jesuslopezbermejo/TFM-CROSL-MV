@@ -99,6 +99,7 @@ size = Nvar
 #Parte de optimización con el CRO
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 f = TiempoAeropuerto(Nvar, stands, data, bounds, Tin, Tout, Tstp, emissions, option, dict_tiempos_llegadas, dict_tiempos_salidas)
+"""
 c = CRO_SL(f, substrates, params)
 population = CoralPopulation(f, substrates, params)
 print("Starting optimization")
@@ -131,18 +132,19 @@ print(mejorfit)
 np.savetxt('paretos_optimos_pop.txt', paretos_optimos_pop[-1])
 np.savetxt('paretos_optimos_fits.txt', paretos_optimos_fits[-1])
 plot_lasts_pareto_optimals(paretos_optimos_fits)
-
+"""
 #Parte de análisis de soluciones
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 sol = pd.read_csv("./data/solution_comp.csv")
 for a in range(0, sol.__len__()):
     sol.iloc[a,0] = np.where(stands == sol.iloc[a,0])[0][-1]
-f.fitness(sol)/(-3600) #devuelve el fitness con el que nos queremos comparar
-
-solopt = pd.read_csv("./best_individual_esc2_time_5sus_f13_todosStand_3k.csv")
-solopt.rename(columns={"0": "stand"}, inplace=True)
-solopt = solopt.drop(columns=["Unnamed: 0"])
-
+fitness_real = f.fitness(sol) #devuelve el fitness con el que nos queremos comparar
+fitness_real = (fitness_real[0]*-1, fitness_real[1]*-1)
+solopt = pd.read_csv("./paretos_optimos_pop.txt",sep=" ",header=None)
+solopt_fitness = pd.read_csv("./paretos_optimos_fits.txt",sep=" ",header=None)
+#solopt.rename(columns={"0": "stand"}, inplace=True)
+#solopt = solopt.drop(columns=["Unnamed: 0"])
+"""
 #Para obtener los tiempos y fuel de cada vuelo de las soluciones:
 solution = solopt
 take_off_time = 120
@@ -296,15 +298,32 @@ total_time_contr = total_time
 total_fuel_contr = total_fuel
 pd.DataFrame(total_fuel).to_csv("esc1_sol_fuels_cro1.csv") #Sol del cro
 diff = 100*(total_fuel_contr.sum()-total_fuel.sum())/total_fuel_contr.sum()
-diff = 100*(total_time_contr.sum()-total_time.sum())/total_time_contr.sum()
+"""
+# Define the data
+colors = ['b']*len(solopt_fitness)
+colors.append('r')
+list_bars = ["Individuo " + str(i + 1) for i in range(len(solopt_fitness))]
+list_bars.append("Real")
+fitness_taxi = [f1 for f1,f2 in solopt_fitness.values]
+fitness_pasajeros = [f2 for f1,f2 in solopt_fitness.values]
+fitness_taxi_pasajeros = fitness_real[0]
+fitness_real_pasajeros = fitness_real[1]
 
-#ahorro por franjas horarias
-timestamps = data.loc[:,"ts_app_2"] + data.loc[:,"ts_taxi_out_1"]
-fechas = pd.to_datetime(timestamps, unit="s")
-horas = pd.DataFrame(fechas)
-horas["fuel_dif"] = total_fuel-total_fuel_contr
-horas[0] = pd.to_datetime(horas[0])
-horas.set_index(0, inplace=True)
+fitness_pasajeros.append(fitness_real_pasajeros)
+fitness_taxi.append(fitness_taxi_pasajeros)
+
+plt.bar(list_bars, fitness_pasajeros, color=colors)
+plt.xlabel("Tiempo de Pasajeros") 
+plt.ylabel("Tiempo en segundos") 
+plt.show()
+
+plt.bar(list_bars, fitness_taxi, color=colors)
+plt.xlabel("Tiempo de Taxi") 
+plt.ylabel("Tiempo en segundos") 
+plt.show()
+input()
+"""
+# Display the plot
 hourly_sum = horas.groupby(pd.Grouper(freq='H')).sum()
 
 hourly_sum.plot(kind='bar')
@@ -359,3 +378,4 @@ companies_sum = data_companies.groupby("company").sum()
 
 companies_sum.loc[["Iberia Airlines", "Iberia Express","Air Europa","Ryanair"],:].plot(kind='bar')
 plt.show()
+"""
