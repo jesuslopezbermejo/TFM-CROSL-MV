@@ -22,25 +22,25 @@ def plot_pareto_optimal(pareto):
     plt.title("Pareto Optimal Solutions")
     plt.show()
 
-def plot_lasts_pareto_optimals(paretos):
+def plot_lasts_pareto_optimals(paretos, name="pareto_optimal_solutions.png"):
     iterations_to_plot = 1
-    if len(paretos) > 20:
-        iterations_to_plot = 0.01
+    #if len(paretos) > 20:
+    #    iterations_to_plot = 0.01
     colors = [hsv_to_rgb([(i * 0.618033988749895) % 1.0, 1, 1])
           for i in range(int(iterations_to_plot * len(paretos)))]
     plt.rc('axes', prop_cycle=(cycler('color', colors)))
      
     for iter, pareto in enumerate(paretos):
-        if iter == len(paretos) - 1 or (iter+1) % 250 == 0:
-            taxi_time = [solution[0] for solution in pareto]
-            passengers_time = [solution[1] for solution in pareto]
-            plt.plot(taxi_time, passengers_time,'-o', label=f"Iteration {iter+1}")
+        #if iter == len(paretos) - 1 or (iter+1) % 250 == 0:
+        taxi_time = [solution[0] for solution in pareto]
+        passengers_time = [solution[1] for solution in pareto]
+        plt.plot(taxi_time, passengers_time,'o', label=f"Iteration {250*(iter)}")
     plt.legend(loc='upper left')
     plt.xlabel("Taxi Time")
     plt.ylabel("Passengers Time")
     plt.title("Pareto Optimal Solutions between iterations")
     plt.show()
-    plt.savefig("pareto_optimal_solutions.png")
+    plt.savefig(name)
 
 params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75}
 substrates = [
@@ -51,7 +51,7 @@ substrates = [
 ]
 
 params = {
-    "popSize": 100,
+    "popSize": 50,
     "rho": 0.6,
     "Fb": 0.98,
     "Fd": 0.1,
@@ -99,7 +99,7 @@ size = Nvar
 #Parte de optimización con el CRO
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 f = TiempoAeropuerto(Nvar, stands, data, bounds, Tin, Tout, Tstp, emissions, option, dict_tiempos_llegadas, dict_tiempos_salidas)
-"""
+
 c = CRO_SL(f, substrates, params)
 population = CoralPopulation(f, substrates, params)
 print("Starting optimization")
@@ -111,11 +111,13 @@ population.larvae_setting(larvae)#aqui se añaden nuevas soluciones
 population.depredation()#aqui se eliminan las peores soluciones por lo que puede no mantenerse el tamaño de la población
 mejor, mejorfit = population.best_solution()
 
+pops = []
+pops.append([individuo.get_fitness() for individuo in population.population])
 iter=0
 paretos_optimos_fits = []
 paretos_optimos_pop = []
 start_time = time.time()
-while iter < 1000: #f.counter < Neval:
+while iter < 2000: #f.counter < Neval:
     iter += 1
     print(f"Empiezan las iteraciones del algoritmo: Niter -> {iter}")
     print(f"len de la population: {len(population.population)}")
@@ -127,12 +129,16 @@ while iter < 1000: #f.counter < Neval:
     paretos_optimos_pop.append(mejor)
     paretos_optimos_fits.append(mejorfit)
     print(f"tiempo -> {time.time()-start_time}")
+    if(iter % 250 == 0):
+        pops.append([individuo.get_fitness() for individuo in population.population])
 mejor, mejorfit = population.best_solution()
 print(mejorfit)
+plot_lasts_pareto_optimals(pops, name="pareto_pops_solutions.png")
 np.savetxt('paretos_optimos_pop.txt', paretos_optimos_pop[-1])
+np.savetxt('paretos_ultima_pop.txt', pops[-1])
 np.savetxt('paretos_optimos_fits.txt', paretos_optimos_fits[-1])
 plot_lasts_pareto_optimals(paretos_optimos_fits)
-"""
+
 #Parte de análisis de soluciones
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 sol = pd.read_csv("./data/solution_comp.csv")
@@ -316,11 +322,13 @@ plt.bar(list_bars, fitness_pasajeros, color=colors)
 plt.xlabel("Tiempo de Pasajeros") 
 plt.ylabel("Tiempo en segundos") 
 plt.show()
+plt.savefig("comparativa_pasajeros.png")
 
 plt.bar(list_bars, fitness_taxi, color=colors)
 plt.xlabel("Tiempo de Taxi") 
 plt.ylabel("Tiempo en segundos") 
 plt.show()
+plt.savefig("comparativa_taxi.png")
 input()
 """
 # Display the plot
