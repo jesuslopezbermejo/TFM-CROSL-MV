@@ -174,8 +174,15 @@ class TiempoAeropuerto(AbsObjectiveFunc):
         solution = pd.DataFrame(solution)
         # esto se hace por si acaso pero no hace falta por que siempre se ejecuta despues de objective que ya lo hace
         self.data.loc[self.data["cod"] == 1, "stand"] = [self.stands.stands[i] for i in solution.values]
+        for index in range(0, self.data.shape[0]):
+            # Cuando cod es 0, se busca el stand del mismo avión
+            if self.data.loc[index, "cod"] == 0:
+                self.data.loc[index, "stand"] = self.data.loc[
+                    np.where(self.data.loc[0:(index - 1), "aircraft_id"] == self.data.loc[index, "aircraft_id"])[0][
+                        -1], "stand"]
+        
         global_time = 0
-        aux_flights = zip(self.data.loc[self.data["cod"] == 1, "stand"], self.data.loc[self.data["cod"] == 1, "flight_type"])
+        aux_flights = zip(self.data.loc[:, "stand"], self.data.loc[:, "flight_type"])
         for assigned_stand, flight_type in aux_flights: #esto no se si se debe hacer solo sobre los que son cod 1, no se si se debe hacer sobre todos 
             if assigned_stand.isdigit():
                 assigned_stand = str(int(assigned_stand))

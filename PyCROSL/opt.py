@@ -13,34 +13,73 @@ import numpy as np
 
 warnings.filterwarnings("ignore")
 
-def plot_pareto_optimal(pareto):
-    taxi_time = [solution[0] for solution in pareto]
-    passengers_time = [solution[1] for solution in pareto]
-    plt.scatter(taxi_time, passengers_time)
-    plt.xlabel("Taxi Time")
-    plt.ylabel("Passengers Time")
-    plt.title("Pareto Optimal Solutions")
+
+def plot_all_populations(pops_fits):
+    colors = [hsv_to_rgb([(i * 0.618033988749895) % 1.0, 1, 1])
+          for i in range(len(pops_fits))]
+    plt.rc('axes', prop_cycle=(cycler('color', colors)))
+    for i,fits in enumerate(pops_fits):
+        fits_inversos = [(-f1, -f2) for f1,f2 in fits]
+        f1 = [f1 for f1,f2 in fits_inversos]
+        f2 = [f2 for f1,f2 in fits_inversos]
+        plt.scatter(f1,f2, marker='o', label="Iter "+str(250*i))
+    plt.legend(loc='upper left')
+    plt.xlabel("Iterations")
+    plt.ylabel("Fitness")
+    plt.title("Fitness of all populations")
     plt.show()
 
+
 def plot_lasts_pareto_optimals(paretos, name="pareto_optimal_solutions.png"):
-    iterations_to_plot = 1
-    #if len(paretos) > 20:
-    #    iterations_to_plot = 0.01
+    paretos_to_plot = len(paretos) if len(paretos) < 5 else len(paretos) // 5
+
     colors = [hsv_to_rgb([(i * 0.618033988749895) % 1.0, 1, 1])
-          for i in range(int(iterations_to_plot * len(paretos)))]
+          for i in range(paretos_to_plot)]
     plt.rc('axes', prop_cycle=(cycler('color', colors)))
+
      
     for iter, pareto in enumerate(paretos):
-        #if iter == len(paretos) - 1 or (iter+1) % 250 == 0:
-        taxi_time = [solution[0] for solution in pareto]
-        passengers_time = [solution[1] for solution in pareto]
-        plt.plot(taxi_time, passengers_time,'o', label=f"Iteration {250*(iter)}")
+        if iter % paretos_to_plot == 0 or iter == len(paretos) - 1:
+            f1 = [f1 for f1,f2 in pareto]
+            f2 = [f2 for f1,f2 in pareto]
+            plt.scatter(f1,f2, marker='o', label="Iter "+str(iter))
     plt.legend(loc='upper left')
     plt.xlabel("Taxi Time")
     plt.ylabel("Passengers Time")
     plt.title("Pareto Optimal Solutions between iterations")
     plt.show()
-    plt.savefig(name)
+
+def save_results(pareto_optimal, pareto_optimal_fits, last_population, last_population_fits):
+    pd.DataFrame(pareto_optimal).to_csv(os.getcwd() + "\\results\\pareto_optimal_FD035_PD09_02_" + str(start_time) + ".csv")
+    pd.DataFrame(pareto_optimal_fits).to_csv(os.getcwd() + "\\results\\pareto_optimal_fits_FD035_PD09_02" + str(start_time) + ".csv")
+    pd.DataFrame(last_population).to_csv(os.getcwd() + "\\results\\last_population_FD035_PD09_02" + str(start_time) + ".csv")
+    pd.DataFrame(last_population_fits).to_csv(os.getcwd() + "\\results\\last_population_fits_FD035_PD09_02" + str(start_time) + ".csv")
+
+def plot_minimos(minimos_its):
+    min_taxi = [minimo[0] for minimo in minimos_its]
+    min_passengers = [minimo[1] for minimo in minimos_its]
+    colors = [hsv_to_rgb([(i * 0.618033988749895) % 1.0, 1, 1])
+          for i in range(len(minimos_its)//4)]
+    plt.rc('axes', prop_cycle=(cycler('color', colors)))
+    plt.scatter(min_taxi, min_passengers, marker='o',label="Minimos")
+    plt.xlabel("Taxi Time")
+    plt.ylabel("Passengers Time")
+    plt.title("Minimos de las poblaciones")
+    plt.legend(loc='upper left')
+    plt.show()
+
+def plot_maximos(maximos_its):
+    max_taxi = [maximo[0] for maximo in maximos_its]
+    max_passengers = [maximo[1] for maximo in maximos_its]
+    colors = [hsv_to_rgb([(i * 0.618033988749895) % 1.0, 1, 1])
+          for i in range(len(maximos_its)//4)]
+    plt.rc('axes', prop_cycle=(cycler('color', colors)))
+    plt.scatter(max_taxi, max_passengers, marker='o',label="Maximos")
+    plt.xlabel("Taxi Time")
+    plt.ylabel("Passengers Time")
+    plt.title("Maximos de las poblaciones")
+    plt.legend(loc='upper left')
+    plt.show()
 
 params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75}
 substrates = [
@@ -54,7 +93,7 @@ params = {
     "popSize": 50,
     "rho": 0.6,
     "Fb": 0.98,
-    "Fd": 0.1,
+    "Fd": 0.35,
     "Pd": 0.9,
     "k": 3,
     "K": 20,
@@ -91,6 +130,8 @@ option = "time"
 # number of optimization variables
 Nvar = data["cod"].sum()
 Neval = 1000
+Niter = 2000
+Npops_to_show = 5
 # bounds of the encoding
 bounds = [0, stands.__len__() - 1]
 
@@ -112,12 +153,16 @@ population.depredation()#aqui se eliminan las peores soluciones por lo que puede
 mejor, mejorfit = population.best_solution()
 
 pops = []
-pops.append([individuo.get_fitness() for individuo in population.population])
+pops_fits = []
+pops_fits.append([individuo.get_fitness() for individuo in population.population])
+pops.append(population.population)
 iter=0
+minimos_its = []
+maximos_its = []
 paretos_optimos_fits = []
 paretos_optimos_pop = []
 start_time = time.time()
-while iter < 2000: #f.counter < Neval:
+while iter < Niter: #f.counter < Neval:
     iter += 1
     print(f"Empiezan las iteraciones del algoritmo: Niter -> {iter}")
     print(f"len de la population: {len(population.population)}")
@@ -127,16 +172,25 @@ while iter < 2000: #f.counter < Neval:
     population.depredation()
     mejor, mejorfit = population.best_solution()
     paretos_optimos_pop.append(mejor)
-    paretos_optimos_fits.append(mejorfit)
+    paretos_optimos_fits.append(list(mejorfit))
+    fitness_0 = [individuo.get_fitness()[0] * -1 for individuo in population.population]
+    fitness_1 = [individuo.get_fitness()[1] * -1 for individuo in population.population]
+    min_fitness_0 = min(fitness_0)
+    min_fitness_1 = min(fitness_1)
+    minimos_its.append((min_fitness_0, min_fitness_1))
+    max_fitness_0 = max(fitness_0)
+    max_fitness_1 = max(fitness_1)
+    maximos_its.append((max_fitness_0, max_fitness_1))
     print(f"tiempo -> {time.time()-start_time}")
-    if(iter % 250 == 0):
-        pops.append([individuo.get_fitness() for individuo in population.population])
+    if((iter % (Niter//Npops_to_show)) == 0 or iter == Niter):
+        pops_fits.append([individuo.get_fitness() for individuo in population.population])
+        pops.append([coral.solution for coral in population.population])
 mejor, mejorfit = population.best_solution()
 print(mejorfit)
-plot_lasts_pareto_optimals(pops, name="pareto_pops_solutions.png")
-np.savetxt('paretos_optimos_pop.txt', paretos_optimos_pop[-1])
-np.savetxt('paretos_ultima_pop.txt', pops[-1])
-np.savetxt('paretos_optimos_fits.txt', paretos_optimos_fits[-1])
+save_results(paretos_optimos_pop[-1], paretos_optimos_fits[-1], pops[-1], pops_fits[-1])
+plot_minimos(minimos_its)
+plot_maximos(maximos_its)
+plot_all_populations(pops_fits)
 plot_lasts_pareto_optimals(paretos_optimos_fits)
 
 #Parte de análisis de soluciones
@@ -146,8 +200,10 @@ for a in range(0, sol.__len__()):
     sol.iloc[a,0] = np.where(stands == sol.iloc[a,0])[0][-1]
 fitness_real = f.fitness(sol) #devuelve el fitness con el que nos queremos comparar
 fitness_real = (fitness_real[0]*-1, fitness_real[1]*-1)
-solopt = pd.read_csv("./paretos_optimos_pop.txt",sep=" ",header=None)
-solopt_fitness = pd.read_csv("./paretos_optimos_fits.txt",sep=" ",header=None)
+solopt = pd.read_csv(os.getcwd() + "\\results\\pareto_optimal_FD035_PD09_02.csv")
+solopt = solopt.iloc[:, 1:]
+solopt_fitness = pd.read_csv(os.getcwd() + "\\results\\pareto_optimal_fits_FD035_PD09_02.csv")
+solopt_fitness = solopt_fitness.iloc[:, 1:]
 #solopt.rename(columns={"0": "stand"}, inplace=True)
 #solopt = solopt.drop(columns=["Unnamed: 0"])
 """
@@ -306,9 +362,9 @@ pd.DataFrame(total_fuel).to_csv("esc1_sol_fuels_cro1.csv") #Sol del cro
 diff = 100*(total_fuel_contr.sum()-total_fuel.sum())/total_fuel_contr.sum()
 """
 # Define the data
-colors = ['b']*len(solopt_fitness)
+colors = ['b']*solopt_fitness.shape[0]
 colors.append('r')
-list_bars = ["Individuo " + str(i + 1) for i in range(len(solopt_fitness))]
+list_bars = ["Individuo " + str(i + 1) for i in range(solopt_fitness.shape[0])]
 list_bars.append("Real")
 fitness_taxi = [f1 for f1,f2 in solopt_fitness.values]
 fitness_pasajeros = [f2 for f1,f2 in solopt_fitness.values]
@@ -322,13 +378,11 @@ plt.bar(list_bars, fitness_pasajeros, color=colors)
 plt.xlabel("Tiempo de Pasajeros") 
 plt.ylabel("Tiempo en segundos") 
 plt.show()
-plt.savefig("comparativa_pasajeros.png")
 
 plt.bar(list_bars, fitness_taxi, color=colors)
 plt.xlabel("Tiempo de Taxi") 
 plt.ylabel("Tiempo en segundos") 
 plt.show()
-plt.savefig("comparativa_taxi.png")
 input()
 """
 # Display the plot
