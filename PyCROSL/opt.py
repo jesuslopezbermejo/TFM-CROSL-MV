@@ -50,10 +50,10 @@ def plot_lasts_pareto_optimals(paretos, name="pareto_optimal_solutions.png"):
     plt.show()
 
 def save_results(pareto_optimal, pareto_optimal_fits, last_population, last_population_fits):
-    pd.DataFrame(pareto_optimal).to_csv(os.getcwd() + "\\results\\pareto_optimal_FD035_PD09_02_" + str(start_time) + ".csv")
-    pd.DataFrame(pareto_optimal_fits).to_csv(os.getcwd() + "\\results\\pareto_optimal_fits_FD035_PD09_02" + str(start_time) + ".csv")
-    pd.DataFrame(last_population).to_csv(os.getcwd() + "\\results\\last_population_FD035_PD09_02" + str(start_time) + ".csv")
-    pd.DataFrame(last_population_fits).to_csv(os.getcwd() + "\\results\\last_population_fits_FD035_PD09_02" + str(start_time) + ".csv")
+    pd.DataFrame(pareto_optimal).to_csv(os.getcwd() + "\\results\\pareto_optimal_FD035_PD09_" + str(int(start_time)) + "_xor.csv")
+    pd.DataFrame(pareto_optimal_fits).to_csv(os.getcwd() + "\\results\\pareto_optimal_fits_FD035_PD09_" + str(int(start_time)) + "_xor.csv")
+    pd.DataFrame(last_population).to_csv(os.getcwd() + "\\results\\last_population_FD035_PD09_" + str(int(start_time)) + "_xor.csv")
+    pd.DataFrame(last_population_fits).to_csv(os.getcwd() + "\\results\\last_population_fits_FD035_PD09_" + str(int(start_time)) + "_xor.csv")
 
 def plot_minimos(minimos_its):
     min_taxi = [minimo[0] for minimo in minimos_its]
@@ -81,12 +81,11 @@ def plot_maximos(maximos_its):
     plt.legend(loc='upper left')
     plt.show()
 
-params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75}
+params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75, "N": 80}
 substrates = [
-    SubstrateInt("2point", params),
-    SubstrateInt("Multipoint", params),
+    SubstrateInt("DE/current-to-rand/1", params),
     SubstrateInt("BLXalpha", params),
-    SubstrateInt("DE/current-to-best/1", params)
+    SubstrateInt("Xor", params)
 ]
 
 params = {
@@ -200,9 +199,9 @@ for a in range(0, sol.__len__()):
     sol.iloc[a,0] = np.where(stands == sol.iloc[a,0])[0][-1]
 fitness_real = f.fitness(sol) #devuelve el fitness con el que nos queremos comparar
 fitness_real = (fitness_real[0]*-1, fitness_real[1]*-1)
-solopt = pd.read_csv(os.getcwd() + "\\results\\pareto_optimal_FD035_PD09_02.csv")
+solopt = pd.read_csv(os.getcwd() + "\\results\\pareto_optimal_FD035_PD09_" + str(int(start_time)) + "_xor.csv")
 solopt = solopt.iloc[:, 1:]
-solopt_fitness = pd.read_csv(os.getcwd() + "\\results\\pareto_optimal_fits_FD035_PD09_02.csv")
+solopt_fitness = pd.read_csv(os.getcwd() + "\\results\\pareto_optimal_fits_FD035_PD09_" + str(int(start_time)) + "_xor.csv")
 solopt_fitness = solopt_fitness.iloc[:, 1:]
 #solopt.rename(columns={"0": "stand"}, inplace=True)
 #solopt = solopt.drop(columns=["Unnamed: 0"])
