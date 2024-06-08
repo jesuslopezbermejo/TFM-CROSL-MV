@@ -89,7 +89,7 @@ substrates = [
 ]
 
 params = {
-    "popSize": 50,
+    "popSize": 100,
     "rho": 0.6,
     "Fb": 0.98,
     "Fd": 0.5,
@@ -129,7 +129,7 @@ option = "time"
 # number of optimization variables
 Nvar = data["cod"].sum()
 Neval = 1000
-Niter = 2000
+Niter = 1000
 Npops_to_show = 5
 # bounds of the encoding
 bounds = [0, stands.__len__() - 1]
