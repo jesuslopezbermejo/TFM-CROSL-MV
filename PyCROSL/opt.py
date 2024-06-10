@@ -81,7 +81,7 @@ def plot_maximos(maximos_its):
     plt.legend(loc='upper left')
     plt.show()
 
-params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75, "N": 300}
+params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75, "N": 400}
 substrates = [
     SubstrateInt("Multipoint", params),
     SubstrateInt("DE/current-to-rand/1", params),
@@ -90,7 +90,7 @@ substrates = [
 ]
 
 params = {
-    "popSize": 100,
+    "popSize": 50,
     "rho": 0.6,
     "Fb": 0.98,
     "Fd": 0.5,
@@ -130,7 +130,7 @@ option = "time"
 # number of optimization variables
 Nvar = data["cod"].sum()
 Neval = 1000
-Niter = 1000
+Niter = 2000
 Npops_to_show = 5
 # bounds of the encoding
 bounds = [0, stands.__len__() - 1]
