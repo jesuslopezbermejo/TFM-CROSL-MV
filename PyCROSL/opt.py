@@ -81,7 +81,7 @@ def plot_maximos(maximos_its):
     plt.legend(loc='upper left')
     plt.show()
 
-params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75, "N": 80}
+params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75, "N": 300}
 substrates = [
     SubstrateInt("Multipoint", params),
     SubstrateInt("DE/current-to-rand/1", params),
