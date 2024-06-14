@@ -471,7 +471,8 @@ class CoralPopulation:
                 # to replace the coral in that position
                 if setted := (idx >= len(self.population)):
                     self.population.append(larva)
-                elif setted := (larva.get_fitness() > self.population[idx].get_fitness()): # aqui al ser 2 vbles, con ser mayor 1 debería valer? yo creo que no
+                elif setted := ((larva.get_fitness()[0] > self.population[idx].get_fitness()[0]) and \
+                                (larva.get_fitness()[1] > self.population[idx].get_fitness()[1])):
                     self.population[idx] = larva
 
                 attempts_left -= 1
@@ -531,7 +532,8 @@ class CoralPopulation:
                 new_solution = operator.evolve(self.population[i], [], self.objfunc)
                 new_solution = self.objfunc.repair_solution(new_solution)
                 new_coral = Coral(new_solution, self.objfunc, self.population[i].substrate)
-                if new_coral.get_fitness() > best.get_fitness(): # aqui al ser 2 vbles, con ser mayor 1 debería valer? yo creo que no
+                if (new_coral.get_fitness()[0] > best.get_fitness()[0]) and \
+                    (new_coral.get_fitness()[1] > best.get_fitness()[1]): # aqui al ser 2 vbles, con ser mayor 1 debería valer? yo creo que no
                     best = new_coral
             
             self.population[i] = best

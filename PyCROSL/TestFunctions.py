@@ -318,6 +318,78 @@ class TiempoAeropuerto(AbsObjectiveFunc):
             previous_index = index
             # La duración del despegue es desde el taxi out hasta el climb
             total_time[index] = self.data.loc[index, "ts_climb"] - self.data.loc[index, "ts_taxi_out_1"]
+        # Se extraen y ordenan por timestamp de llegada al runway los despegues con runway 18L
+        data18L = self.data.loc[self.data["runway"] == "18L"].sort_values(by="ts_rw")
+        previous_index = -1
+        for index, row in data18L.iterrows():
+            # Si es el primer vuelo en ese runway, no tiene que parar
+            if previous_index == -1:
+                self.data.loc[index, "duration_stop"] = 0
+                self.data.loc[index, "ts_climb"] = self.data.loc[index, "ts_rw"] + take_off_time
+            # En caso contrario, la parada sera la diferencia entre el timestamp de climb del anterior y el timestamp de llegada al runway
+            else:
+                self.data.loc[index, "duration_stop"] = max(0,
+                                                       self.data.loc[previous_index, "ts_climb"] - self.data.loc[
+                                                           index, "ts_rw"])
+                self.data.loc[index, "ts_climb"] = self.data.loc[index, "ts_rw"] + self.data.loc[
+                    index, "duration_stop"] + take_off_time
+            previous_index = index
+            # La duración del despegue es desde el taxi out hasta el climb
+            total_time[index] = self.data.loc[index, "ts_climb"] - self.data.loc[index, "ts_taxi_out_1"]
+        # Se extraen y ordenan por timestamp de llegada al runway los despegues con runway 18R
+        data18R = self.data.loc[self.data["runway"] == "18R"].sort_values(by="ts_rw")
+        previous_index = -1
+        for index, row in data18R.iterrows():
+            # Si es el primer vuelo en ese runway, no tiene que parar
+            if previous_index == -1:
+                self.data.loc[index, "duration_stop"] = 0
+                self.data.loc[index, "ts_climb"] = self.data.loc[index, "ts_rw"] + take_off_time
+            # En caso contrario, la parada sera la diferencia entre el timestamp de climb del anterior y el timestamp de llegada al runway
+            else:
+                self.data.loc[index, "duration_stop"] = max(0,
+                                                       self.data.loc[previous_index, "ts_climb"] - self.data.loc[
+                                                           index, "ts_rw"])
+                self.data.loc[index, "ts_climb"] = self.data.loc[index, "ts_rw"] + self.data.loc[
+                    index, "duration_stop"] + take_off_time
+            previous_index = index
+            # La duración del despegue es desde el taxi out hasta el climb
+            total_time[index] = self.data.loc[index, "ts_climb"] - self.data.loc[index, "ts_taxi_out_1"]
+        # Se extraen y ordenan por timestamp de llegada al runway los despegues con runway 32L
+        data32L = self.data.loc[self.data["runway"] == "32L"].sort_values(by="ts_rw")
+        previous_index = -1
+        for index, row in data32L.iterrows():
+            # Si es el primer vuelo en ese runway, no tiene que parar
+            if previous_index == -1:
+                self.data.loc[index, "duration_stop"] = 0
+                self.data.loc[index, "ts_climb"] = self.data.loc[index, "ts_rw"] + take_off_time
+            # En caso contrario, la parada sera la diferencia entre el timestamp de climb del anterior y el timestamp de llegada al runway
+            else:
+                self.data.loc[index, "duration_stop"] = max(0,
+                                                       self.data.loc[previous_index, "ts_climb"] - self.data.loc[
+                                                           index, "ts_rw"])
+                self.data.loc[index, "ts_climb"] = self.data.loc[index, "ts_rw"] + self.data.loc[
+                    index, "duration_stop"] + take_off_time
+            previous_index = index
+            # La duración del despegue es desde el taxi out hasta el climb
+            total_time[index] = self.data.loc[index, "ts_climb"] - self.data.loc[index, "ts_taxi_out_1"]
+        # Se extraen y ordenan por timestamp de llegada al runway los despegues con runway 32R
+        data32R = self.data.loc[self.data["runway"] == "32R"].sort_values(by="ts_rw")
+        previous_index = -1
+        for index, row in data32R.iterrows():
+            # Si es el primer vuelo en ese runway, no tiene que parar
+            if previous_index == -1:
+                self.data.loc[index, "duration_stop"] = 0
+                self.data.loc[index, "ts_climb"] = self.data.loc[index, "ts_rw"] + take_off_time
+            # En caso contrario, la parada sera la diferencia entre el timestamp de climb del anterior y el timestamp de llegada al runway
+            else:
+                self.data.loc[index, "duration_stop"] = max(0,
+                                                       self.data.loc[previous_index, "ts_climb"] - self.data.loc[
+                                                           index, "ts_rw"])
+                self.data.loc[index, "ts_climb"] = self.data.loc[index, "ts_rw"] + self.data.loc[
+                    index, "duration_stop"] + take_off_time
+            previous_index = index
+            # La duración del despegue es desde el taxi out hasta el climb
+            total_time[index] = self.data.loc[index, "ts_climb"] - self.data.loc[index, "ts_taxi_out_1"]
         #self.data.to_csv("prueba_data.csv")
         total_fuel = np.zeros(self.data.shape[0])
         media_motores = 2.3836

@@ -22,7 +22,7 @@ def plot_all_populations(pops_fits):
         fits_inversos = [(-f1, -f2) for f1,f2 in fits]
         f1 = [f1 for f1,f2 in fits_inversos]
         f2 = [f2 for f1,f2 in fits_inversos]
-        plt.scatter(f1,f2, marker='o', label="Iter "+str(250*i))
+        plt.scatter(f1,f2, marker='o', label="Iter "+str((Niter//Npops_to_show)*i))
     plt.legend(loc='upper left')
     plt.xlabel("Iterations")
     plt.ylabel("Fitness")
@@ -50,10 +50,10 @@ def plot_lasts_pareto_optimals(paretos, name="pareto_optimal_solutions.png"):
     plt.show()
 
 def save_results(pareto_optimal, pareto_optimal_fits, last_population, last_population_fits):
-    pd.DataFrame(pareto_optimal).to_csv(os.getcwd() + "\\results\\pareto_optimal_FD05_PD09_" + str(int(start_time)) + "_xor.csv")
-    pd.DataFrame(pareto_optimal_fits).to_csv(os.getcwd() + "\\results\\pareto_optimal_fits_FD05_PD09_" + str(int(start_time)) + "_xor.csv")
-    pd.DataFrame(last_population).to_csv(os.getcwd() + "\\results\\last_population_FD05_PD09_" + str(int(start_time)) + "_xor.csv")
-    pd.DataFrame(last_population_fits).to_csv(os.getcwd() + "\\results\\last_population_fits_FD05_PD09_" + str(int(start_time)) + "_xor.csv")
+    pd.DataFrame(pareto_optimal).to_csv(os.getcwd() + "\\results\\postfix_taxifunction\\pareto_optimal_" + str(int(start_time)) + ".csv")
+    pd.DataFrame(pareto_optimal_fits).to_csv(os.getcwd() + "\\results\\postfix_taxifunction\\pareto_optimal_fits_" + str(int(start_time)) + ".csv")
+    pd.DataFrame(last_population).to_csv(os.getcwd() + "\\results\\postfix_taxifunction\\last_population_" + str(int(start_time)) + ".csv")
+    pd.DataFrame(last_population_fits).to_csv(os.getcwd() + "\\results\\postfix_taxifunction\\last_population_fits_" + str(int(start_time)) + ".csv")
 
 def plot_minimos(minimos_its):
     min_taxi = [minimo[0] for minimo in minimos_its]
@@ -81,17 +81,16 @@ def plot_maximos(maximos_its):
     plt.legend(loc='upper left')
     plt.show()
 
-params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75, "N": 200}
+params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75, "N": 400}
 substrates = [
     SubstrateInt("2point", params),
     SubstrateInt("Multipoint", params),
     SubstrateInt("DE/current-to-rand/1", params),
     SubstrateInt("BLXalpha", params),
-    SubstrateInt("Xor", params)
 ]
 
 params = {
-    "popSize": 50,
+    "popSize": 100,
     "rho": 0.6,
     "Fb": 0.98,
     "Fd": 0.5,
@@ -131,7 +130,7 @@ option = "time"
 # number of optimization variables
 Nvar = data["cod"].sum()
 Neval = 1000
-Niter = 2000
+Niter = 1000
 Npops_to_show = 5
 # bounds of the encoding
 bounds = [0, stands.__len__() - 1]
@@ -201,9 +200,9 @@ for a in range(0, sol.__len__()):
     sol.iloc[a,0] = np.where(stands == sol.iloc[a,0])[0][-1]
 fitness_real = f.fitness(sol) #devuelve el fitness con el que nos queremos comparar
 fitness_real = (fitness_real[0]*-1, fitness_real[1]*-1)
-solopt = pd.read_csv(os.getcwd() + "\\results\\pareto_optimal_FD05_PD09_" + str(int(start_time)) + "_xor.csv")
+solopt = pd.read_csv(os.getcwd() + "\\results\\postfix_taxifunction\\pareto_optimal_" + str(int(start_time)) + ".csv")
 solopt = solopt.iloc[:, 1:]
-solopt_fitness = pd.read_csv(os.getcwd() + "\\results\\pareto_optimal_fits_FD05_PD09_" + str(int(start_time)) + "_xor.csv")
+solopt_fitness = pd.read_csv(os.getcwd() + "\\results\\postfix_taxifunction\\pareto_optimal_fits_" + str(int(start_time)) + ".csv")
 solopt_fitness = solopt_fitness.iloc[:, 1:]
 #solopt.rename(columns={"0": "stand"}, inplace=True)
 #solopt = solopt.drop(columns=["Unnamed: 0"])
@@ -384,7 +383,6 @@ plt.bar(list_bars, fitness_taxi, color=colors)
 plt.xlabel("Tiempo de Taxi") 
 plt.ylabel("Tiempo en segundos") 
 plt.show()
-input()
 """
 # Display the plot
 hourly_sum = horas.groupby(pd.Grouper(freq='H')).sum()
