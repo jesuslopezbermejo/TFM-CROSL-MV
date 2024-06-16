@@ -83,10 +83,7 @@ def plot_maximos(maximos_its):
 
 params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75, "N": 400}
 substrates = [
-    SubstrateInt("2point", params),
-    SubstrateInt("Multipoint", params),
-    SubstrateInt("DE/current-to-rand/1", params),
-    SubstrateInt("BLXalpha", params),
+    SubstrateInt("BLXalpha", params)
 ]
 
 params = {
@@ -143,6 +140,7 @@ f = TiempoAeropuerto(Nvar, stands, data, bounds, Tin, Tout, Tstp, emissions, opt
 
 c = CRO_SL(f, substrates, params)
 population = CoralPopulation(f, substrates, params)
+start_time = time.time()
 print("Starting optimization")
 population.generate_random()
 population.generate_substrates(0)
@@ -161,8 +159,7 @@ minimos_its = []
 maximos_its = []
 paretos_optimos_fits = []
 paretos_optimos_pop = []
-start_time = time.time()
-while iter < Niter: #f.counter < Neval:
+while iter < Niter and int(time.time()-start_time) < 86400: #f.counter < Neval: 86400 es el numero de segundos en un dia
     iter += 1
     print(f"Empiezan las iteraciones del algoritmo: Niter -> {iter}")
     print(f"len de la population: {len(population.population)}")
