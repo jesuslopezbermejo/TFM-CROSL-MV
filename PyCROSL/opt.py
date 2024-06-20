@@ -83,14 +83,16 @@ def plot_maximos(maximos_its):
 
 params = {"F": 0.7, "Pr": 0.8, "Cr": 0.75, "N": 400}
 substrates = [
-    SubstrateInt("BLXalpha", params)
+    SubstrateInt("Multipoint", params),
+    SubstrateInt("2point", params),
+    SubstrateInt("Xor", params)
 ]
 
 params = {
     "popSize": 100,
     "rho": 0.6,
     "Fb": 0.98,
-    "Fd": 0.5,
+    "Fd": 0.2,
     "Pd": 0.9,
     "k": 3,
     "K": 20,
