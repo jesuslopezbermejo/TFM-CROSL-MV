@@ -2,8 +2,8 @@
 
 ## About
 
-This project is a Python implementation of the **Coral Reef Optimization with Substrate Layers** algorithm, 
-both in its original version (CRO-SL) and in its probabilistic versions (PCRO-SL and DPCRO-SL). The goal is to provide an
+This project is a Python re-implementation of the **Coral Reef Optimization with Substrate Layers** algorithm, 
+both in its original version (CRO-SL) and in its probabilistic versions (PCRO-SL and DPCRO-SL). The original algorithm was a mono-objective algorithm, but in this proyect is modified to use it as a multi-objective algoritmh. The goal is to provide an
 easy-to-use, versatile Python package that can be used **off-the-shelf** for a wide array of optimization problems. 
 Among its features, we highlight:
 
